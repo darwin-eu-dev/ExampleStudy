@@ -18,6 +18,8 @@ ENV DATABASECONNECTOR_JAR_FOLDER="/opt/hades/jdbc_drivers"
 RUN R -e "DatabaseConnector::downloadJdbcDrivers('all');"
 
 RUN install2.r --error Andromeda && rm -rf /tmp/download_packages/ /tmp/*.rds
+# CirceR depends on rJava and RJSONIO; install RJSONIO explicitly to avoid dependency issues
+RUN install2.r --error RJSONIO && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error CirceR && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error SqlRender && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error renv && rm -rf /tmp/download_packages/ /tmp/*.rds

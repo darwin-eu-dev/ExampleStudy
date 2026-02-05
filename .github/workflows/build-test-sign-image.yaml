@@ -58,19 +58,31 @@ jobs:
 
       # 1) CI build (LOAD locally) so we can run tests inside the image.
       #    Attestations (sbom/provenance) require pushing, so we do that only after tests pass.
+      #    Build is run with --progress=plain and teed to build.log for artifact upload on failure.
       - name: Build (CI / local load)
         id: build_ci
-        uses: docker/build-push-action@v6
+        run: |
+          set -o pipefail
+          docker buildx build \
+            --progress=plain \
+            --load \
+            --file ./Dockerfile \
+            --tag ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.sha }} \
+            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --platform linux/amd64 \
+            . 2>&1 | tee build.log
+
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: false
-          load: true
-          tags: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          name: docker-build-log
+          path: build.log
+          retention-days: 30
+          if-no-files-found: ignore
 
       # Run your build/test script INSIDE the built image.
       # Assumes your image contains your package source (COPY . ...) and that this script exists.
