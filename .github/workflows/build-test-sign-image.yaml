@@ -145,7 +145,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          build-args: BASE_IMAGE=examplestudy-base:latest
+          build-args: |
+            BASE_IMAGE=executionengine.azurecr.io/${{ steps.image.outputs.name }}-base:latest
           platforms: linux/amd64
           push: true
           tags: |
