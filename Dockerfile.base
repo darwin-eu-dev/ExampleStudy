@@ -65,14 +65,16 @@ RUN install2.r --error \
 RUN echo "DATABASECONNECTOR_JAR_FOLDER=/opt/hades/jdbc_drivers" >> /usr/local/lib/R/etc/Renviron
 RUN echo "RENV_PATHS_CELLAR=/opt/renv_cellar" >> /usr/local/lib/R/etc/Renviron
 
-# SQL Server odbc
-RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null
-RUN curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-RUN apt-get clean && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17
-
-# Snowflake odbc
-RUN curl -fsSL --output snowflake-odbc-3.1.1.x86_64.deb https://sfc-repo.snowflakecomputing.com/odbc/linux/3.1.1/snowflake-odbc-3.1.1.x86_64.deb
-RUN sudo dpkg -i snowflake-odbc-3.1.1.x86_64.deb
+# SQL Server and Snowflake ODBC (x86_64/amd64 only; skipped on arm64 for multi-platform builds)
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+  curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null \
+  && curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list \
+  && apt-get clean && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 \
+  && curl -fsSL --output snowflake-odbc-3.1.1.x86_64.deb https://sfc-repo.snowflakecomputing.com/odbc/linux/3.1.1/snowflake-odbc-3.1.1.x86_64.deb \
+  && sudo dpkg -i snowflake-odbc-3.1.1.x86_64.deb \
+  && sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini; \
+fi
 
 RUN install2.r --error here log4r testthat renv \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
@@ -82,9 +84,6 @@ RUN R -e 'CDMConnector::downloadEunomiaData()'
 
 # Install vim
 RUN apt-get -y update && apt-get install -y vim && apt-get clean && rm -rf /var/lib/apt/lists/
-
-# Fix Snowflake odbc lib path
-RUN sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini
 
 RUN mkdir /results
 
