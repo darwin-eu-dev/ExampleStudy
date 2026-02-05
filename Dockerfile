@@ -1,7 +1,6 @@
 # Ubuntu 22.04 (Jammy) · R 4.2 · Dependencies for ExampleStudy
 # For Snowflake ODBC use: docker build --platform linux/amd64 ...
-ARG TARGETPLATFORM=linux/amd64
-FROM --platform=${TARGETPLATFORM} rocker/rstudio:4.2
+FROM rocker/rstudio:4.2
 LABEL org.opencontainers.image.maintainer="Adam Black <a.black@darwin-eu.org>"
 
 # Install java and rJava
@@ -32,19 +31,16 @@ RUN apt-get -y update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/
 
 RUN install2.r --error openssl httr xml2 remotes && rm -rf /tmp/download_packages/ /tmp/*.rds
+RUN install2.r --error duckdb && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install odbc and RPostgres drivers (unixODBC + dev headers + pkg-config for R odbc package)
 RUN apt-get -y update && apt-get install -y --install-suggests \
-   unixodbc unixodbc-dev libpq-dev curl pkg-config build-essential \
-   && apt-get clean \
-   && rm -rf /var/lib/apt/lists/ \
-   && PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig 
-   
-RUN install2.r --error RPostgres duckdb \
-   && PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig \
-
-RUN install2.r --error odbc \
-   && rm -rf /tmp/download_packages/ /tmp/*.rds
+    unixodbc unixodbc-dev libpq-dev curl pkg-config build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/ \
+    && PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig \
+    install2.r --error odbc \
+    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install Darwin packages (and study Imports: dplyr, ggplot2, shiny, plotly)
 RUN install2.r --error \
