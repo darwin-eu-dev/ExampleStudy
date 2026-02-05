@@ -128,7 +128,7 @@ jobs:
           set -euo pipefail
           docker run --rm \
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.sha }} \
-            Rscript -f tests/build_test.R
+            Rscript tests/build_test.R
 
       # Optional (but common): scan the image before release
       - name: Trivy scan (fail on HIGH/CRITICAL)
