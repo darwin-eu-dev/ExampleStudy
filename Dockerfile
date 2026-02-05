@@ -11,7 +11,8 @@ RUN apt-get -y update && apt-get install -y \
    && rm -rf /var/lib/apt/lists/ \
    && sudo R CMD javareconf
 
-RUN echo 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/jammy/2024-04-14"))' >>"${R_HOME}/etc/Rprofile.site"
+# Snapshot must be >= 2024-04-18 for CirceR (first on CRAN that date); use 2024-05-15 for stability
+RUN echo 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/jammy/2026-02-01"))' >>"${R_HOME}/etc/Rprofile.site"
 RUN install2.r --error rJava && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error DatabaseConnector && rm -rf /tmp/download_packages/ /tmp/*.rds
 ENV DATABASECONNECTOR_JAR_FOLDER="/opt/hades/jdbc_drivers"
