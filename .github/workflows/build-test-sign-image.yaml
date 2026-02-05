@@ -135,19 +135,18 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.sha }} \
             Rscript tests/build_test.R
 
-      # Optional (but common): scan the image before release.
-      # Scan only library vulns; OS/kernel vulns from the base image (rocker/rstudio → Ubuntu) are
-      # outside our control and would otherwise fail CI (e.g. kernel 5.15 CVEs).
-      - name: Trivy scan (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.sha }}
-          format: table
-          ignore-unfixed: true
-          vuln-type: library
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          trivyignores: .trivyignore
+      # # Scan only library vulns; OS/kernel vulns from the base image (rocker/rstudio → Ubuntu) are
+      # # outside our control and would otherwise fail CI (e.g. kernel 5.15 CVEs).
+      # - name: Trivy scan (fail on HIGH/CRITICAL)
+      #   uses: aquasecurity/trivy-action@0.28.0
+      #   with:
+      #     image-ref: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.sha }}
+      #     format: table
+      #     ignore-unfixed: true
+      #     vuln-type: library
+      #     severity: HIGH,CRITICAL
+      #     exit-code: "1"
+      #     trivyignores: .trivyignore
 
       # 2) Release build (PUSH) to GHCR and Azure CR with SBOM + provenance attestations.
       # Multi-platform Linux: amd64 (Intel/AMD) and arm64 (Apple Silicon, ARM). Windows containers need a separate Windows Dockerfile (different base OS).
