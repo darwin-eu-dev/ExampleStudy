@@ -121,6 +121,11 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
+      # Push CI image so Trivy (and anything else) can pull it from the registry.
+      - name: Push CI image to GHCR
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.sha }}
+
       # Run your build/test script INSIDE the built image.
       # Assumes your image contains your package source (COPY . ...) and that this script exists.
       - name: Run build/test script inside image
