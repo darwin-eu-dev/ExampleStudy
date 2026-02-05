@@ -1,6 +1,3 @@
-# Silence warnings during tests (e.g. "package 'X' was built under R version ...")
-options(warn = -1)
-
 library(testthat)
 library(ExampleStudy)
 

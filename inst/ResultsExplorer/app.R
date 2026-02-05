@@ -2,18 +2,21 @@
 # ExampleStudy Shiny App — AML characterization (P4-C1-007)
 # -----------------------------------------------------------------------------
 
-library(shiny)
-library(shinydashboard)
-library(bslib)
-library(dplyr)
-library(plotly)
-library(ggplot2)
-library(DT)
-library(gt)
-library(gtExtras)
-library(IncidencePrevalence)
-library(shinycssloaders)
-library(shinyWidgets)
+# Load packages without "built under R version" etc. warnings
+suppressWarnings({
+  library(shiny)
+  library(shinydashboard)
+  library(bslib)
+  library(dplyr)
+  library(plotly)
+  library(ggplot2)
+  library(DT)
+  library(gt)
+  library(gtExtras)
+  library(IncidencePrevalence)
+  library(shinycssloaders)
+  library(shinyWidgets)
+})
 
 # -----------------------------------------------------------------------------
 # Data loading
