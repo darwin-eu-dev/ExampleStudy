@@ -18,7 +18,8 @@ Imports:
     plotly,
     omopgenerics,
     CirceR,
-    SqlRender
+    SqlRender,
+    DT
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Suggests:

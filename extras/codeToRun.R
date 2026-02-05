@@ -20,4 +20,4 @@ cdm <- cdmFromCon(
 runStudy(cdm, outputFolder)
 
 # Launch the Shiny app (use the folder where results were saved)
-launchShinyApp(outputFolder)
+launchResultsExplorer(outputFolder)

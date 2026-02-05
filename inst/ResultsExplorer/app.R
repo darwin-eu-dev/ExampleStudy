@@ -19,18 +19,15 @@ library(shinyWidgets)
 # Data loading
 # -----------------------------------------------------------------------------
 
-
-
-
 if (exists("shinySettings", where = .GlobalEnv)) {
   if (!file.exists(shinySettings$dataFolder)) stop("Could not find results data!")
   dataFolder <- shinySettings$dataFolder
 } else {
-  dataFolder <- "data"
+  dataFolder <- "../../output"
 }
 
-snapshot <- readr::read_csv(file.path(dataFolder, "snapshot.csv"))
-cohortCounts <- readr::read_csv(file.path(dataFolder, "cohortCounts.csv"))
+dbinfo <- readr::read_csv(file.path(dataFolder, "snapshot.csv"), show_col_types = FALSE)
+cohortCounts <- readr::read_csv(file.path(dataFolder, "cohortCounts.csv"), show_col_types = FALSE)
 incidence <- omopgenerics::importSummarisedResult(file.path(dataFolder, "incidence.csv"))
 
 # Global picker options
@@ -60,7 +57,7 @@ incidenceUI <- function(id) {
       p("Incidence estimates are shown below, please select configuration to filter them:"),
       fluidRow(
         column(2, pickerInput(ns("cdm"), "CDM name", choices = unique(incidence$cdm_name), selected = unique(incidence$cdm_name), multiple = T, options = opt)),
-        column(2, pickerInput(ns("outcome"), "Outcome", choices = incidenceOutcomes, selected = "aml", multiple = T, options = opt)),
+        column(2, pickerInput(ns("outcome"), "Outcome", choices = incidenceOutcomes, selected = incidenceOutcomes[1], multiple = T, options = opt)),
         column(2, pickerInput(ns("age_group"), "Age group", choices = unique(settings(incidence)$denominator_age_group), selected = unique(settings(incidence)$denominator_age_group), multiple = T, options = opt)),
         column(2, pickerInput(ns("sex"), "Sex", choices = unique(settings(incidence)$denominator_sex), selected = "Both", multiple = T, options = opt)),
         column(2, pickerInput(ns("interval"), "Interval", choices = c("years", "overall"), selected = "years", multiple = F, options = opt)),
@@ -323,57 +320,31 @@ databasesServer <- function(id) {
 # Sidebar and tab layout
 # -----------------------------------------------------------------------------
 
-conditionalTabs <- function(...) {
-  items <- list(...)
-  items[!vapply(items, is.null, logical(1))]
-}
-
-has_ded <- !is.null(dedData)
-has_md  <- !is.null(measurementDiagnostics)
-
-sidebar_items <- conditionalTabs(
-  menuItem("Background", tabName = "background", icon = icon("info-circle")),
-  menuItem("Databases", tabName = "databases", icon = icon("database")),
-  menuItem("Incidence", tabName = "incidence", icon = icon("chart-line"))
-)
-
-tab_items <- conditionalTabs(
-  tabItem("background", backgroundUI("background")),
-  tabItem("databases", databasesUI("databases")),
-  tabItem("incidence", incidenceUI("incidence")),
-)
-
-# -----------------------------------------------------------------------------
-# App UI and server (required for runApp() and package tests)
-# -----------------------------------------------------------------------------
-
 ui <- dashboardPage(
   dashboardHeader(title = "Example Study"),
 
   dashboardSidebar(
-    do.call(sidebarMenu, sidebar_items)
+    sidebarMenu(
+      menuItem("Background", tabName = "background", icon = icon("info-circle")),
+      menuItem("Databases", tabName = "databases", icon = icon("database")),
+      menuItem("Incidence", tabName = "incidence", icon = icon("chart-line"))
+    )
   ),
 
   dashboardBody(
-    do.call(tabItems, tab_items)
+    tabItems(
+      tabItem("background", backgroundUI("background")),
+      tabItem("databases", databasesUI("databases")),
+      tabItem("incidence", incidenceUI("incidence"))
+    )
   )
 )
 
 server <- function(input, output, session) {
   backgroundServer("background")
   databasesServer("databases")
-  demographicsServer("demographics")
-  cohortAttritionServer("cohortAttrition")
   incidenceServer("incidence")
-  comorbiditiesServer("comorbidities")
-  priorHistoryServer("priorHistory")
-  lsServer("ls")
-  whoServer("who")
-  survivalServer("survival")
-  treatmentPatternsServer("treatmentPatterns")
-  dedServer("ded", dedData)
-  measurementDiagnosticsServer("md")
 }
 
-
+shinyApp(ui, server)
 

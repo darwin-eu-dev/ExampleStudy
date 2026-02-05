@@ -1,19 +1,19 @@
-#' Launch the Shiny app for incidence results
+#' Launch the Results Explorer Shiny app
 #'
-#' Starts the package's Shiny app to visualize incidence results. The app
-#' reads result files from the given output folder.
+#' @param dataFolder       A folder where the exported zip files with the results are stored.
+#'                         Zip files containing results from multiple databases can be placed in the same
+#'                         folder.
+#' @param launch.browser   Should the app be launched in your default browser, or in a Shiny window.
+#'                         Note: copying to clipboard will not work in a Shiny window.
+#' @details
+#' Launches a Shiny app that allows the user to explore the diagnostics
 #'
-#' @param outputFolder Path to the folder where study results were saved
-#'   (e.g. by \code{\link{runStudy}}). The app looks here for exported
-#'   incidence results.
-#' @return Invoked for side effect (launches the Shiny app).
 #' @export
-launchShinyApp <- function(outputFolder) {
-  outputFolder <- normalizePath(outputFolder, mustWork = TRUE)
-  options(exampleStudy.outputFolder = outputFolder)
-  appDir <- system.file("shiny", "app.R", package = "ExampleStudy")
-  if (appDir == "") {
-    stop("Shiny app not found. Reinstall the package.")
-  }
-  shiny::runApp(appDir, launch.browser = TRUE)
+launchResultsExplorer <- function(dataFolder, launch.browser = FALSE, useCachedData = FALSE) {
+  appDir <- system.file("ResultsExplorer", package = "ExampleStudy", mustWork = TRUE)
+  shinySettings <- list(dataFolder = dataFolder)
+  .GlobalEnv$shinySettings <- shinySettings
+  on.exit(rm(shinySettings, envir = .GlobalEnv))
+  shiny::runApp(appDir, launch.browser = launch.browser)
 }
+
