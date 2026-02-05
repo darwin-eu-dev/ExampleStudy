@@ -76,7 +76,7 @@ RUN install2.r --error here log4r testthat renv \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 RUN echo "EUNOMIA_DATA_FOLDER=/opt/eunomia_data" >> /usr/local/lib/R/etc/Renviron
-RUN R -e 'CDMConnector::download_eunomia_data()'
+RUN R -e 'CDMConnector::downloadEunomiaData()'
 
 # Install vim
 RUN apt-get -y update && apt-get install -y vim && apt-get clean && rm -rf /var/lib/apt/lists/
