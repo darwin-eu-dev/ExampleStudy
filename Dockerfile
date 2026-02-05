@@ -1,5 +1,7 @@
 # Ubuntu 22.04 (Jammy) · R 4.2 · Dependencies for ExampleStudy
-FROM --platform=linux/amd64 rocker/rstudio:4.2
+# For Snowflake ODBC use: docker build --platform linux/amd64 ...
+ARG TARGETPLATFORM=linux/amd64
+FROM --platform=${TARGETPLATFORM} rocker/rstudio:4.2
 LABEL org.opencontainers.image.maintainer="Adam Black <a.black@darwin-eu.org>"
 
 # Install java and rJava
@@ -11,7 +13,6 @@ RUN apt-get -y update && apt-get install -y \
    && rm -rf /var/lib/apt/lists/ \
    && sudo R CMD javareconf
 
-# Snapshot must be >= 2024-04-18 for CirceR (first on CRAN that date); use 2024-05-15 for stability
 RUN echo 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/jammy/2026-02-01"))' >>"${R_HOME}/etc/Rprofile.site"
 RUN install2.r --error rJava && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error DatabaseConnector && rm -rf /tmp/download_packages/ /tmp/*.rds
@@ -19,7 +20,6 @@ ENV DATABASECONNECTOR_JAR_FOLDER="/opt/hades/jdbc_drivers"
 RUN R -e "DatabaseConnector::downloadJdbcDrivers('all');"
 
 RUN install2.r --error Andromeda && rm -rf /tmp/download_packages/ /tmp/*.rds
-# CirceR depends on rJava and RJSONIO; install RJSONIO explicitly to avoid dependency issues
 RUN install2.r --error RJSONIO && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error CirceR && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error SqlRender && rm -rf /tmp/download_packages/ /tmp/*.rds
@@ -34,13 +34,12 @@ RUN apt-get -y update && apt-get install -y \
 RUN install2.r --error openssl httr xml2 remotes \
     && rm -rf /tmp/download_packages/ /tmp/*.rds
 
-# Install odbc and RPostgres drivers
+# Install odbc and RPostgres drivers (pkg-config so R odbc package configure finds unixODBC)
 RUN apt-get -y update && apt-get install -y --install-suggests \
-   unixodbc unixodbc-dev libpq-dev curl \
+   unixodbc unixodbc-dev libpq-dev curl pkg-config \
    && apt-get clean \
-   && rm -rf /var/lib/apt/lists/
-
-RUN install2.r --error odbc RPostgres duckdb \
+   && rm -rf /var/lib/apt/lists/ \
+   && install2.r --error odbc RPostgres duckdb \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install Darwin packages (and study Imports: dplyr, ggplot2, shiny, plotly)
