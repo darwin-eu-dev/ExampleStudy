@@ -1,0 +1,23 @@
+# Library CVEs from transitive JDBC/Java deps (DatabaseConnector::downloadJdbcDrivers).
+# Versions are controlled by HADES/CRAN; we do not ship or patch these JARs.
+# Re-evaluate when upgrading DatabaseConnector or when HADES updates driver set.
+# See: https://github.com/OHDSI/DatabaseConnector
+
+# jackson-databind (transitive)
+CVE-2022-42003
+CVE-2022-42004
+
+# com.microsoft.sqlserver:mssql-jdbc
+CVE-2025-59250
+
+# commons-io
+CVE-2024-47554
+
+# io.grpc:grpc-netty-shaded
+CVE-2025-55163
+
+# org.apache.commons:commons-compress (Databricks JDBC)
+CVE-2021-35515
+CVE-2021-35516
+CVE-2021-35517
+CVE-2021-36090

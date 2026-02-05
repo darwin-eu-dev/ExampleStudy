@@ -147,6 +147,7 @@ jobs:
           vuln-type: library
           severity: HIGH,CRITICAL
           exit-code: "1"
+          trivyignores: .trivyignore
 
       # 2) Release build (PUSH) to GHCR and Azure CR with SBOM + provenance attestations.
       # Multi-platform Linux: amd64 (Intel/AMD) and arm64 (Apple Silicon, ARM). Windows containers need a separate Windows Dockerfile (different base OS).
