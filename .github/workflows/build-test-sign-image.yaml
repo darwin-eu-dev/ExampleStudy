@@ -197,3 +197,13 @@ jobs:
           DIGEST="${{ steps.build_release.outputs.digest }}"
           # This signs the attached attestations (provenance/SBOM) for that digest.
           cosign sign-attestation --yes "${IMAGE}@${DIGEST}"
+
+      # Log out from Azure CR (login-action requires password even for logout)
+      - name: Log out from Azure Container Registry
+        if: always()
+        uses: docker/login-action@v3
+        with:
+          registry: executionengine.azurecr.io
+          username: github-actions-push
+          password: ${{ secrets.CONTAINER_REGISTRY_TOKEN }}
+          logout: true
