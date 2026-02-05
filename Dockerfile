@@ -1,6 +1,6 @@
 # Ubuntu 22.04 (Jammy) · R 4.2 · Dependencies for ExampleStudy
 FROM --platform=linux/amd64 rocker/rstudio:4.2
-MAINTAINER Adam Black <a.black@darwin-eu.org>
+LABEL org.opencontainers.image.maintainer="Adam Black <a.black@darwin-eu.org>"
 
 # Install java and rJava
 RUN apt-get -y update && apt-get install -y \
@@ -51,7 +51,7 @@ RUN install2.r --error \
         dplyr \
         ggplot2 \
         shiny \
-        plotly
+        plotly \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # GitHub token for installs (pass at build time: docker build --build-arg GITHUB_PAT=xxx)
