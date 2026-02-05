@@ -186,12 +186,7 @@ jobs:
           DIGEST="${{ steps.build_release.outputs.digest }}"
           cosign sign --yes "${IMAGE}@${DIGEST}"
 
-      # Optional: sign the SBOM/provenance attestations too (recommended if you plan to verify them client-side)
-      - name: Sign attestations (keyless)
-        run: |
-          set -euo pipefail
-          IMAGE="${{ env.REGISTRY }}/${{ steps.image.outputs.name }}"
-          DIGEST="${{ steps.build_release.outputs.digest }}"
-          # This signs the attached attestations (provenance/SBOM) for that digest.
-          cosign sign-attestation --yes "${IMAGE}@${DIGEST}"
+      # Note: cosign no longer provides "sign-attestation" for pre-attached attestations.
+      # The image is signed above with "cosign sign". Provenance and SBOM are attached by
+      # docker/build-push-action (provenance: true, sbom: true) and remain available for verification.
 
