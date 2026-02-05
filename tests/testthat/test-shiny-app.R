@@ -1,10 +1,10 @@
 test_that("Shiny app is found in package", {
-  app_path <- system.file("shiny", "app.R", package = "ExampleStudy")
-  expect_true(nzchar(app_path), info = "Shiny app app.R should be in inst/shiny/")
+  app_path <- system.file("ResultsExplorer", "app.R", package = "ExampleStudy")
+  expect_true(nzchar(app_path), info = "Shiny app app.R should be in inst/ResultsExplorer/")
 })
 
 test_that("Shiny app loads and returns a shiny.appobj", {
-  app_path <- system.file("shiny", "app.R", package = "ExampleStudy")
+  app_path <- system.file("ResultsExplorer", "app.R", package = "ExampleStudy")
   skip_if(!nzchar(app_path), "Shiny app not found (package not installed?)")
 
   # Set option so app.R can resolve outputFolder (required by app)
@@ -17,18 +17,18 @@ test_that("Shiny app loads and returns a shiny.appobj", {
 })
 
 test_that("Shiny app launches without error", {
-  app_dir <- system.file("shiny", "app.R", package = "ExampleStudy")
+  app_dir <- system.file("ResultsExplorer", package = "ExampleStudy")
   skip_if(!nzchar(app_dir), "Shiny app not found (package not installed?)")
   skip_if_not_installed("callr")
 
-  # Launch app in a subprocess (pass app path so child does not need package installed)
+  # Launch app in a subprocess (pass app dir so child does not need package installed)
   err <- tryCatch(
     callr::r(
-      function(app_path, out_dir) {
+      function(app_dir, out_dir) {
         options(exampleStudy.outputFolder = out_dir)
-        shiny::runApp(app_path, launch.browser = FALSE)
+        shiny::runApp(app_dir, launch.browser = FALSE)
       },
-      args = list(app_path = app_dir, out_dir = tempdir()),
+      args = list(app_dir = app_dir, out_dir = tempdir()),
       timeout = 3
     ),
     error = identity
