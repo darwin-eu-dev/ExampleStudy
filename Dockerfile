@@ -34,12 +34,14 @@ RUN install2.r --error openssl httr xml2 remotes && rm -rf /tmp/download_package
 RUN install2.r --error duckdb && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install odbc and RPostgres drivers (unixODBC + dev headers + pkg-config for R odbc package)
+# CXX required: R was built without C++ compiler; odbc's configure invokes ${CXX} -E
 RUN apt-get -y update && apt-get install -y --install-suggests \
     unixodbc unixodbc-dev libpq-dev curl pkg-config build-essential \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/ \
     && PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig \
-    install2.r --error odbc \
+    CXX=g++ \
+    install2.r --error RPostgres duckdb odbc \
     && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install Darwin packages (and study Imports: dplyr, ggplot2, shiny, plotly)
