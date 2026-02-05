@@ -18,6 +18,8 @@ ENV DATABASECONNECTOR_JAR_FOLDER="/opt/hades/jdbc_drivers"
 RUN R -e "DatabaseConnector::downloadJdbcDrivers('all');"
 
 RUN install2.r --error Andromeda && rm -rf /tmp/download_packages/ /tmp/*.rds
+RUN install2.r --error CirceR SqlRender && rm -rf /tmp/download_packages/ /tmp/*.rds
+RUN install2.r --error renv && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install utility R packages
 RUN apt-get -y update && apt-get install -y \
@@ -49,16 +51,10 @@ RUN install2.r --error \
         dplyr \
         ggplot2 \
         shiny \
-        plotly \
+        plotly
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # GitHub token for installs (pass at build time: docker build --build-arg GITHUB_PAT=xxx)
-ARG GITHUB_PAT
-ENV GITHUB_PAT=${GITHUB_PAT}
-RUN R -e "stopifnot(nchar(Sys.getenv('GITHUB_PAT')) > 0)"
-RUN R -e "remotes::install_github('ohdsi/CirceR', auth_token = Sys.getenv('GITHUB_PAT'))"
-RUN R -e "remotes::install_github('ohdsi/Capr', auth_token = Sys.getenv('GITHUB_PAT'))"
-
 RUN echo "DATABASECONNECTOR_JAR_FOLDER=/opt/hades/jdbc_drivers" >> /usr/local/lib/R/etc/Renviron
 RUN echo "RENV_PATHS_CELLAR=/opt/renv_cellar" >> /usr/local/lib/R/etc/Renviron
 
@@ -71,7 +67,7 @@ RUN apt-get clean && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsq
 RUN curl -fsSL --output snowflake-odbc-3.1.1.x86_64.deb https://sfc-repo.snowflakecomputing.com/odbc/linux/3.1.1/snowflake-odbc-3.1.1.x86_64.deb
 RUN sudo dpkg -i snowflake-odbc-3.1.1.x86_64.deb
 
-RUN install2.r --error here log4r testthat \
+RUN install2.r --error here log4r testthat renv \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 RUN echo "EUNOMIA_DATA_FOLDER=/opt/eunomia_data" >> /usr/local/lib/R/etc/Renviron
@@ -83,16 +79,14 @@ RUN apt-get -y update && apt-get install -y vim && apt-get clean && rm -rf /var/
 # Fix Snowflake odbc lib path
 RUN sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini
 
-# Onboarding R packages (optional for full Darwin stack)
-RUN R -e "remotes::install_github('ohdsi/Achilles', 'v1.7.2', auth_token = Sys.getenv('GITHUB_PAT'))"
-RUN R -e "remotes::install_github('darwin-eu/CdmOnboarding', 'v3.1.0', auth_token = Sys.getenv('GITHUB_PAT'))"
-RUN R -e "remotes::install_github('darwin-eu/DashboardExport', 'v1.2.0', auth_token = Sys.getenv('GITHUB_PAT'))"
-RUN R -e "remotes::install_github('ohdsi/DataQualityDashboard', auth_token = Sys.getenv('GITHUB_PAT'))"
-RUN R -e "remotes::install_github('darwin-eu/CohortDiagnostics', auth_token = Sys.getenv('GITHUB_PAT'))"
 
 RUN mkdir /results
+
 # Copy package source into image (for running study and CI tests)
 COPY . /code
 WORKDIR /code
+
+# Install R package dependencies from renv.lock
+RUN R -e "renv::restore()"
 
 CMD ["bash"]
