@@ -31,15 +31,19 @@ RUN apt-get -y update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/
 
-RUN install2.r --error openssl httr xml2 remotes \
-    && rm -rf /tmp/download_packages/ /tmp/*.rds
+RUN install2.r --error openssl httr xml2 remotes && rm -rf /tmp/download_packages/ /tmp/*.rds
 
-# Install odbc and RPostgres drivers (pkg-config so R odbc package configure finds unixODBC)
+# Install odbc and RPostgres drivers (unixODBC + dev headers + pkg-config for R odbc package)
 RUN apt-get -y update && apt-get install -y --install-suggests \
-   unixodbc unixodbc-dev libpq-dev curl pkg-config \
+   unixodbc unixodbc-dev libpq-dev curl pkg-config build-essential \
    && apt-get clean \
    && rm -rf /var/lib/apt/lists/ \
-   && install2.r --error odbc RPostgres duckdb \
+   && PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig 
+   
+RUN install2.r --error RPostgres duckdb \
+   && PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig \
+
+RUN install2.r --error odbc \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install Darwin packages (and study Imports: dplyr, ggplot2, shiny, plotly)
