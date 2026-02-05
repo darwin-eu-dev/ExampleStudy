@@ -1,0 +1,2 @@
+cdm_name,cdm_source_name,cdm_description,cdm_documentation_reference,cdm_version,cdm_holder,cdm_release_date,vocabulary_version,person_count,observation_period_count,earliest_observation_period_start_date,latest_observation_period_end_date,snapshot_date,cdm_data_hash
+Synpuf,Synpuf,,,v5.3.1,ohdsi,2018-03-15,v5.0 06-AUG-21,1000,1048,2008-01-01,2010-12-31,2026-02-05,

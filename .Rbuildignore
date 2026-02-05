@@ -1,0 +1,6 @@
+^renv$
+^renv\.lock$
+^ExampleStudy\.Rproj$
+^\.Rproj\.user$
+^extras$
+^LICENSE\.md$
