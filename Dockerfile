@@ -18,7 +18,8 @@ ENV DATABASECONNECTOR_JAR_FOLDER="/opt/hades/jdbc_drivers"
 RUN R -e "DatabaseConnector::downloadJdbcDrivers('all');"
 
 RUN install2.r --error Andromeda && rm -rf /tmp/download_packages/ /tmp/*.rds
-RUN install2.r --error CirceR SqlRender && rm -rf /tmp/download_packages/ /tmp/*.rds
+RUN install2.r --error CirceR && rm -rf /tmp/download_packages/ /tmp/*.rds
+RUN install2.r --error SqlRender && rm -rf /tmp/download_packages/ /tmp/*.rds
 RUN install2.r --error renv && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install utility R packages
