@@ -6,6 +6,12 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      rebuild_base:
+        description: 'Rebuild base image from Dockerfile.base and push to registry'
+        required: false
+        default: false
+        type: boolean
 
 # Needed for pushing to GHCR + keyless cosign signing (OIDC)
 permissions:
@@ -54,12 +60,14 @@ jobs:
 
       # From here on, buildx (and docker) can pull/push from/to GHCR and Azure.
 
-      # Try to pull base image; only build if pull fails (e.g. first run or base not yet published).
+      # Try to pull base image; build if pull fails or if rebuild_base input is true.
       - name: Try pull base image
         id: pull_base
         run: |
           BASE_IMAGE="executionengine.azurecr.io/${{ steps.image.outputs.name }}-base:latest"
-          if docker pull "$BASE_IMAGE"; then
+          if [ "${{ github.event.inputs.rebuild_base }}" = "true" ]; then
+            echo "need_build=true" >> $GITHUB_OUTPUT
+          elif docker pull "$BASE_IMAGE"; then
             docker tag "$BASE_IMAGE" examplestudy-base:latest
             echo "need_build=false" >> $GITHUB_OUTPUT
           else
