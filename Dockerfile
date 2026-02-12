@@ -8,6 +8,9 @@ ARG BASE_IMAGE=examplestudy-base:latest
 FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.maintainer="Adam Black <a.black@darwin-eu.org>"
 
+RUN install2.r --error devtools remotes \
+   && rm -rf /tmp/download_packages/ /tmp/*.rds
+
 WORKDIR /code
 COPY . /code
 

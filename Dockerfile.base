@@ -76,7 +76,7 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
   && sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini; \
 fi
 
-RUN install2.r --error here log4r testthat renv \
+RUN install2.r --error here log4r testthat renv devtools remotes cli rlang \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 RUN echo "EUNOMIA_DATA_FOLDER=/opt/eunomia_data" >> /usr/local/lib/R/etc/Renviron
