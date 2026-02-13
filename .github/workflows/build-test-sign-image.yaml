@@ -74,9 +74,8 @@ jobs:
             echo "need_build=true" >> $GITHUB_OUTPUT
           fi
 
-      # Build base image only when it could not be pulled.
-      # Multi-platform: build for linux/amd64 and linux/arm64 (Apple Silicon, ARM servers).
-      # Note: Dockerfile.base has x86_64-only bits (Snowflake/MS ODBC); arm64 may need conditional steps.
+      # Build base image only when it could not be pulled or rebuild_base is set.
+      # linux/amd64 only: rocker/rstudio:4.2 has no arm64 manifest; Dockerfile.base also has x86_64-only bits (Snowflake/MS ODBC).
       - name: Build base image (CI / local load)
         if: steps.pull_base.outputs.need_build == 'true'
         run: |
@@ -86,7 +85,7 @@ jobs:
             --tag "$BASE_REPO" \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
-            --platform linux/amd64,linux/arm64 \
+            --platform linux/amd64 \
             --push \
             .
           docker pull "$BASE_REPO"
@@ -157,7 +156,7 @@ jobs:
       #     trivyignores: .trivyignore
 
       # 2) Release build (PUSH) to GHCR and Azure CR with SBOM + provenance attestations.
-      # Multi-platform Linux: amd64 (Intel/AMD) and arm64 (Apple Silicon, ARM). Windows containers need a separate Windows Dockerfile (different base OS).
+      # linux/amd64 only: base image (rocker/rstudio) is amd64-only, so study image must match.
       - name: Build & push (release + attestations)
         id: build_release
         uses: docker/build-push-action@v6
@@ -166,7 +165,7 @@ jobs:
           file: ./Dockerfile
           build-args: |
             BASE_IMAGE=executionengine.azurecr.io/${{ steps.image.outputs.name }}-base:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
