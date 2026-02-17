@@ -1,8 +1,12 @@
 # Base image for ExampleStudy: R 4.2, Java, DB drivers, Darwin R packages, ODBC, etc.
 # Build and tag before building the study image, e.g.:
-#   docker build -f Dockerfile.base -t examplestudy-base:latest .
-# For Snowflake ODBC use: docker build -f Dockerfile.base --platform linux/amd64 -t examplestudy-base:latest .
-FROM rocker/rstudio:4.2
+#   docker build -f Dockerfile.base --platform linux/amd64 -t examplestudy-base:latest .
+# Preinstalled drivers support get_connection(dbms) for:
+#   postgres  -> RPostgres (env: CDM5_POSTGRESQL_*)
+#   snowflake -> odbc (env: SNOWFLAKE_*, SNOWFLAKE_DRIVER e.g. "Snowflake DSII")
+#   sqlserver -> odbc (env: SQL_SERVER_DRIVER e.g. "ODBC Driver 18 for SQL Server", CDM5_SQL_SERVER_*)
+#   spark     -> odbc::databricks() (env: DATABRICKS_HTTPPATH)
+FROM --platform=linux/amd64 rocker/rstudio:4.2
 LABEL org.opencontainers.image.maintainer="Adam Black <a.black@darwin-eu.org>"
 
 # Install java and rJava
@@ -36,9 +40,10 @@ RUN install2.r --error openssl httr xml2 remotes && rm -rf /tmp/download_package
 RUN install2.r --error duckdb && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 # Install odbc and RPostgres drivers (unixODBC + dev headers + pkg-config for R odbc package)
+# libsasl2-modules-gssapi-mit: dependency for Simba/Databricks ODBC if installed via DATABRICKS_ODBC_DEB_URL
 # CXX required: R was built without C++ compiler; odbc's configure invokes ${CXX} -E
 RUN apt-get -y update && apt-get install -y --install-suggests \
-    unixodbc unixodbc-dev libpq-dev curl pkg-config build-essential \
+    unixodbc unixodbc-dev libpq-dev curl pkg-config build-essential libsasl2-modules-gssapi-mit \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/ \
     && PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig \
@@ -65,16 +70,20 @@ RUN install2.r --error \
 RUN echo "DATABASECONNECTOR_JAR_FOLDER=/opt/hades/jdbc_drivers" >> /usr/local/lib/R/etc/Renviron
 RUN echo "RENV_PATHS_CELLAR=/opt/renv_cellar" >> /usr/local/lib/R/etc/Renviron
 
-# SQL Server and Snowflake ODBC (x86_64/amd64 only; skipped on arm64 for multi-platform builds)
-ARG TARGETARCH
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-  curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null \
+# SQL Server and Snowflake ODBC (amd64 image)
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc > /dev/null \
   && curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list \
-  && apt-get clean && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 \
+  && apt-get clean && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
   && curl -fsSL --output snowflake-odbc-3.1.1.x86_64.deb https://sfc-repo.snowflakecomputing.com/odbc/linux/3.1.1/snowflake-odbc-3.1.1.x86_64.deb \
   && sudo dpkg -i snowflake-odbc-3.1.1.x86_64.deb \
-  && sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini; \
-fi
+  && rm -f snowflake-odbc-3.1.1.x86_64.deb \
+  && sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini
+
+# Databricks ODBC (for odbc::databricks()). Simba Spark ODBC 2.9.4 from Databricks S3.
+RUN curl -fsSL --output /tmp/databricks-odbc.deb \
+  "https://databricks-bi-artifacts.s3.us-east-2.amazonaws.com/simbaspark-drivers/odbc/2.9.4/simbaspark_2.9.4_amd64.deb" \
+  && sudo dpkg -i /tmp/databricks-odbc.deb \
+  && rm -f /tmp/databricks-odbc.deb
 
 RUN install2.r --error here log4r testthat renv devtools remotes cli rlang \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
@@ -86,5 +95,6 @@ RUN R -e 'CDMConnector::downloadEunomiaData()'
 RUN apt-get -y update && apt-get install -y vim && apt-get clean && rm -rf /var/lib/apt/lists/
 
 RUN mkdir /results
+WORKDIR /code
 
 CMD ["bash"]
