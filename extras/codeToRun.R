@@ -1,6 +1,10 @@
 # Run the ExampleStudy and launch the Shiny app
 
 renv::restore()
+
+# install the study package
+devtools::install(upgrade = "never")
+
 library(ExampleStudy)
 library(CDMConnector)
 
