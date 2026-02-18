@@ -77,7 +77,11 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc
   && curl -fsSL --output snowflake-odbc-3.1.1.x86_64.deb https://sfc-repo.snowflakecomputing.com/odbc/linux/3.1.1/snowflake-odbc-3.1.1.x86_64.deb \
   && sudo dpkg -i snowflake-odbc-3.1.1.x86_64.deb \
   && rm -f snowflake-odbc-3.1.1.x86_64.deb \
-  && sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini
+  && sed -i 's/libodbcinst.so.1/libodbcinst.so.2/g' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini \
+  && sed -i 's|^ODBCInstLib=.*|ODBCInstLib=/usr/lib/x86_64-linux-gnu/libodbcinst.so.2|' /usr/lib/snowflake/odbc/lib/simba.snowflake.ini
+
+# So ODBC drivers (Snowflake, etc.) and unixODBC can load shared libs at runtime
+ENV LD_LIBRARY_PATH=/usr/lib/snowflake/odbc/lib:/usr/lib/x86_64-linux-gnu
 
 # Databricks ODBC (for odbc::databricks()). Required: place SimbaSparkODBC-*-Debian-64bit.zip in extras/ before building.
 COPY extras/SimbaSparkODBC-*-Debian-64bit.zip /tmp/databricks-odbc.zip
