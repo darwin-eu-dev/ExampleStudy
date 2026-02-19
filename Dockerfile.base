@@ -94,7 +94,7 @@ RUN apt-get update && apt-get install -y unzip \
   && DEB="$(ls /tmp/SimbaSparkODBC-*-Debian-64bit/simbaspark_*_amd64.deb)" && test -n "$DEB" && sudo dpkg -i "$DEB" \
   && rm -rf /tmp/databricks-odbc.zip /tmp/SimbaSparkODBC-*-Debian-64bit
 
-RUN install2.r --error here log4r testthat renv devtools remotes cli rlang \
+RUN install2.r --error here log4r testthat renv devtools remotes cli rlang uuid \
    && rm -rf /tmp/download_packages/ /tmp/*.rds
 
 RUN echo "EUNOMIA_DATA_FOLDER=/opt/eunomia_data" >> /usr/local/lib/R/etc/Renviron
